@@ -26,4 +26,19 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float GroundSpeed;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float Direction;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsAccelerating;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float StartDirection;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float StopDirection;
+	
+private:
+	bool bWasMovingLastFrame;
 };
