@@ -14,9 +14,20 @@ void UHackAndSlashPlayerAnimInstance::NativeInitializeAnimation()
 		PlayerCharacterMovement = PlayerCharacter->GetCharacterMovement();
 	}
 	
+	// Ground locomotion init
 	bWasMovingLastFrame = false;
 	StartDirection = 0.f;
 	StopDirection = 0.f;
+	
+	// Jump init
+	bWasFallingLastFrame = false;
+	JumpStartThreshold = 100.f;
+	ApexThreshold = 50.f;
+	VerticalVelocity = 0.f;
+	bIsFalling = false;
+	bIsJumping = false;
+	bIsFallingDown = false;
+	bIsAtApex = false;
 }
 
 void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -25,6 +36,8 @@ void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	
 	if (PlayerCharacterMovement && PlayerCharacter)
 	{
+		// ---- GROUND LOCOMOTION LOGIC ---- //
+		
 		// Calculate ground speed
 		GroundSpeed = UKismetMathLibrary::VSizeXY(PlayerCharacterMovement->Velocity);
 		
@@ -52,5 +65,36 @@ void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		}
 		
 		bWasMovingLastFrame = bIsMovingNow;
+		
+		// ---- JUMP LOGIC ---- //
+		
+		// Get vertical velocity
+		VerticalVelocity = PlayerCharacterMovement->Velocity.Z;
+		
+		// Check if character is falling
+		bIsFalling = PlayerCharacterMovement->IsFalling();
+		
+		// Determine jump phase based on vertical velocity
+		if (bIsFalling)
+		{
+			// Rising up (Jump Start phase)
+			bIsJumping = VerticalVelocity > JumpStartThreshold;
+			
+			// At apex (near zero velocity)
+			bIsAtApex = FMath::Abs(VerticalVelocity) <= ApexThreshold;
+			
+			// Falling down (past apex)
+			bIsFallingDown = VerticalVelocity < -ApexThreshold;
+		}
+		else
+		{
+			// On ground - reset all jump flags
+			bIsJumping = false;
+			bIsAtApex = false;
+			bIsFallingDown = false;
+		}
+		
+		// Store previous falling frame
+		bWasFallingLastFrame = bIsFalling;
 	}
 }

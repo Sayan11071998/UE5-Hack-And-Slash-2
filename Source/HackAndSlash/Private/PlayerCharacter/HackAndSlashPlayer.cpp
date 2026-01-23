@@ -5,8 +5,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 
-#include "HackAndSlashDebugHelper.h"
-
 AHackAndSlashPlayer::AHackAndSlashPlayer() :
 	CameraArmLength(430.f)
 {
@@ -84,9 +82,7 @@ void AHackAndSlashPlayer::Move(const FInputActionValue& Value)
 	const FVector RightDirection { FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y) };
 
 	AddMovementInput(ForwardDirection, MovementVector.Y);
-	
 	AddMovementInput(RightDirection, MovementVector.X);
-	Debug::Print(TEXT("Move Working!"));
 }
 
 void AHackAndSlashPlayer::Look(const FInputActionValue& Value)
@@ -98,20 +94,14 @@ void AHackAndSlashPlayer::Look(const FInputActionValue& Value)
 	// Mouse
 	AddControllerYawInput(LookVector.X);
 	AddControllerPitchInput(LookVector.Y);
-	
-	Debug::Print(TEXT("Look Working!"));
 }
 
 void AHackAndSlashPlayer::Jump()
 {
 	Super::Jump();
-	
-	Debug::Print(TEXT("Jump Started!"));
 }
 
 void AHackAndSlashPlayer::StopJumping()
 {
 	Super::StopJumping();
-	
-	Debug::Print(TEXT("Jump Stopped!"));
 }

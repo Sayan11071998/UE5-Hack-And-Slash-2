@@ -24,6 +24,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	TObjectPtr<UCharacterMovementComponent> PlayerCharacterMovement;
 	
+	// Ground locomotion
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float GroundSpeed;
 	
@@ -39,6 +40,29 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float StopDirection;
 	
+	// Jump
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsFalling;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsJumping;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsFallingDown; // Negative velocity past apex
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsAtApex;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float JumpStartThreshold;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float ApexThreshold;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float VerticalVelocity;
+	
 private:
 	bool bWasMovingLastFrame;
+	bool bWasFallingLastFrame;
 };
