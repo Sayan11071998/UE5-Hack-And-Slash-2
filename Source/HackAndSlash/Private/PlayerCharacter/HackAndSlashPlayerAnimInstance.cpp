@@ -28,6 +28,11 @@ void UHackAndSlashPlayerAnimInstance::NativeInitializeAnimation()
 	bIsJumping = false;
 	bIsFallingDown = false;
 	bIsAtApex = false;
+	
+	// Turn in place init
+	YawDelta = 0.f;
+	bShouldTurnInPlace = false;
+	LastRotation = FRotator::ZeroRotator;
 }
 
 void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -38,10 +43,7 @@ void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		// ---- GROUND LOCOMOTION LOGIC ---- //
 		
-		// Calculate ground speed
 		GroundSpeed = UKismetMathLibrary::VSizeXY(PlayerCharacterMovement->Velocity);
-		
-		// Checking for acceleration
 		bIsAccelerating = PlayerCharacterMovement->GetCurrentAcceleration().SizeSquared() > 0.f;
 		
 		// Calculate current direction
@@ -68,10 +70,7 @@ void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		
 		// ---- JUMP LOGIC ---- //
 		
-		// Get vertical velocity
 		VerticalVelocity = PlayerCharacterMovement->Velocity.Z;
-		
-		// Check if character is falling
 		bIsFalling = PlayerCharacterMovement->IsFalling();
 		
 		// Determine jump phase based on vertical velocity
@@ -96,5 +95,21 @@ void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		
 		// Store previous falling frame
 		bWasFallingLastFrame = bIsFalling;
+		
+		// ---- TURN IN PLACE LOGIC ---- //
+		
+		if (!bIsFalling && GroundSpeed < 10.f)
+		{
+			FRotator CurrentRotation = PlayerCharacter->GetActorRotation();
+			YawDelta = UKismetMathLibrary::NormalizedDeltaRotator(CurrentRotation, LastRotation).Yaw;
+			LastRotation = CurrentRotation;
+			
+			bShouldTurnInPlace = FMath::Abs(YawDelta) > TurnInPlaceThreshold;
+		}
+		else
+		{
+			bShouldTurnInPlace = false;
+			LastRotation = PlayerCharacter->GetActorRotation();
+		}
 	}
 }

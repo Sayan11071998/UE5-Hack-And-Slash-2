@@ -62,7 +62,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	float VerticalVelocity;
 	
+	// Turn in place
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float YawDelta;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bShouldTurnInPlace;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float TurnInPlaceThreshold = 90.f;
+	
 private:
 	bool bWasMovingLastFrame;
 	bool bWasFallingLastFrame;
+	FRotator LastRotation;
 };
