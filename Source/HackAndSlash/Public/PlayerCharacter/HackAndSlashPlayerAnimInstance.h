@@ -77,9 +77,6 @@ public:
 	float PreviousDirection;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float DirectionChangeRate;
-	
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bShouldPivot;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
@@ -112,7 +109,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	bool bIsAttacking;
 
-	// Variables added from Reference Screenshots
+	// Rotation logic (Aim Offset & Leaning)
 	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
 	float Roll;
 
@@ -129,6 +126,11 @@ public:
 	bool bIsFullBody;
 	
 private:
+	void UpdateGroundLocomotion(float DeltaSeconds);
+	void UpdateJumpLogic();
+	void UpdateRotation(float DeltaSeconds);
+	void UpdateTurnInPlace();
+
 	bool bWasMovingLastFrame;
 	bool bWasFallingLastFrame;
 	FRotator LastRotation;
