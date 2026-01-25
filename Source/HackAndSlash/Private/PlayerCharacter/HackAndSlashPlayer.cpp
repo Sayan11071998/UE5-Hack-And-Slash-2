@@ -4,6 +4,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Items/Weapon.h"
 
 #include "HackAndSlashDebugHelper.h"
 
@@ -52,6 +53,13 @@ void AHackAndSlashPlayer::BeginPlay()
 			PlayerSubsystem->AddMappingContext(PlayerDefaultMappingContext, 0);
 		}
 	}
+	
+	// Spawn and equip default weapon
+	if (DefaultWeaponClass)
+	{
+		AWeapon* DefaultWeapon = GetWorld()->SpawnActor<AWeapon>(DefaultWeaponClass);
+		EquipWeapon(DefaultWeapon);
+	}
 }
 
 void AHackAndSlashPlayer::Tick(float DeltaTime)
@@ -77,7 +85,7 @@ void AHackAndSlashPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 void AHackAndSlashPlayer::Move(const FInputActionValue& Value)
 {
-	// Block movement if during attack, hit reaction etc..
+	// Block movement if during attack, hit reaction etc
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 	
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -121,4 +129,13 @@ void AHackAndSlashPlayer::StopJumping()
 void AHackAndSlashPlayer::Attack()
 {
 	Debug::Print(TEXT("Player is Attacking"));
+}
+
+void AHackAndSlashPlayer::EquipWeapon(TObjectPtr<AWeapon> Weapon)
+{
+	if (Weapon && GetMesh())
+	{
+		Weapon->AttackMeshToComponent(GetMesh(), WeaponSocketName);
+		EquippedWeapon = Weapon;
+	}
 }

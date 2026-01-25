@@ -10,6 +10,7 @@ class UInputAction;
 class UInputMappingContext;
 class UCameraComponent;
 class USpringArmComponent;
+class AWeapon;
 
 UCLASS()
 class HACKANDSLASH_API AHackAndSlashPlayer : public ACharacter
@@ -32,6 +33,9 @@ protected:
 	
 	// Attack method
 	void Attack();
+	
+	// Combat
+	void EquipWeapon(TObjectPtr<AWeapon> Weapon);
 	
 private:
 	// Camera settings
@@ -59,6 +63,16 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Enhanced Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> PlayerAttackAction;
+	
+	// Weapon system
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	FName WeaponSocketName;
+	
+	UPROPERTY()
+	TObjectPtr<AWeapon> EquippedWeapon;
 	
 	// Action state
 	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
