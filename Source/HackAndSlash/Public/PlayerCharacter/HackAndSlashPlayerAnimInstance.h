@@ -72,6 +72,62 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	float TurnInPlaceThreshold = 90.f;
 	
+	// Pivot detection (for 180 degree direction changes)
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float PreviousDirection;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float DirectionChangeRate;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bShouldPivot;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float PivotDirection;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float PivotThreshold = 135.f;
+	
+	// Slope detection
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float SlopeAngle;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsOnSlope;
+	
+	// Locomotion state tracking
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsMoving;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bJustStartedMoving;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bJustStoppedMoving;
+	
+	// Combat state
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bIsInCombat;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bIsAttacking;
+
+	// Variables added from Reference Screenshots
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float Roll;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float Pitch;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float Yaw;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	FRotator RotationLastTick;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bIsFullBody;
+	
 private:
 	bool bWasMovingLastFrame;
 	bool bWasFallingLastFrame;
