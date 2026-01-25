@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "CharacterTypes.h"
 #include "HackAndSlashPlayer.generated.h"
 
 struct FInputActionValue;
@@ -29,6 +30,9 @@ protected:
 	virtual void Jump() override;
 	virtual void StopJumping() override;
 	
+	// Attack method
+	void Attack();
+	
 private:
 	// Camera settings
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Settings", meta = (AllowPrivateAccess = "true"))
@@ -52,4 +56,15 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Enhanced Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> PlayerJumpAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Enhanced Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> PlayerAttackAction;
+	
+	// Action state
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
+	
+public:
+	FORCEINLINE bool IsUnoccupied() const { return ActionState == EActionState::EAS_Unoccupied ; }
+	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 };

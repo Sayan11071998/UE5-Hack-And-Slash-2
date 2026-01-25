@@ -5,6 +5,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 
+#include "HackAndSlashDebugHelper.h"
+
 AHackAndSlashPlayer::AHackAndSlashPlayer() :
 	CameraArmLength(430.f)
 {
@@ -31,6 +33,8 @@ AHackAndSlashPlayer::AHackAndSlashPlayer() :
 	ViewCamera->SetupAttachment(CameraBoom);
 	ViewCamera->bUsePawnControlRotation = false;
 	ViewCamera->SetRelativeLocation(FVector(0.f, 40.f, 0.f));
+	
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void AHackAndSlashPlayer::BeginPlay()
@@ -66,11 +70,16 @@ void AHackAndSlashPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		
 		EnhancedInputComponent->BindAction(PlayerJumpAction, ETriggerEvent::Started, this, &AHackAndSlashPlayer::Jump);
 		EnhancedInputComponent->BindAction(PlayerJumpAction, ETriggerEvent::Completed, this, &AHackAndSlashPlayer::StopJumping);
+		
+		EnhancedInputComponent->BindAction(PlayerAttackAction, ETriggerEvent::Triggered, this, &AHackAndSlashPlayer::Attack);
 	}
 }
 
 void AHackAndSlashPlayer::Move(const FInputActionValue& Value)
 {
+	// Block movement if during attack, hit reaction etc..
+	if (ActionState != EActionState::EAS_Unoccupied) return;
+	
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	
 	if (GetController() == nullptr) return;
@@ -98,10 +107,18 @@ void AHackAndSlashPlayer::Look(const FInputActionValue& Value)
 
 void AHackAndSlashPlayer::Jump()
 {
-	Super::Jump();
+	if (IsUnoccupied())
+	{
+		Super::Jump();
+	}
 }
 
 void AHackAndSlashPlayer::StopJumping()
 {
 	Super::StopJumping();
+}
+
+void AHackAndSlashPlayer::Attack()
+{
+	Debug::Print(TEXT("Player is Attacking"));
 }

@@ -71,6 +71,9 @@ void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		UpdateJumpLogic();
 		UpdateTurnInPlace();
 		UpdateRotation(DeltaSeconds);
+		
+		// Get action state from player
+		ActionState = PlayerCharacter->GetActionState();
 
 		// Check curve for FullBody state
 		bIsFullBody = GetCurveValue(FName(TEXT("FullBody"))) > 0.f;
