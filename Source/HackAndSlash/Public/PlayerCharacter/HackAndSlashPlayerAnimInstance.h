@@ -68,6 +68,9 @@ public:
 	float YawDelta;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float Lean;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bShouldTurnInPlace;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
