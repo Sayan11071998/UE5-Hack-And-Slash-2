@@ -21,6 +21,9 @@ public:
 	AHackAndSlashPlayer();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	// Combat
+	void AttackEnd();
 
 protected:
 	virtual void BeginPlay() override;
@@ -43,8 +46,7 @@ protected:
 	
 	// Play montages
 	int32 PlayAttackMontage();
-	
-	
+
 private:
 	// Camera settings
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Settings", meta = (AllowPrivateAccess = "true"))

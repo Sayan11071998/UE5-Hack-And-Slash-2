@@ -86,7 +86,7 @@ void AHackAndSlashPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 void AHackAndSlashPlayer::Move(const FInputActionValue& Value)
 {
 	// Block movement if during attack, hit reaction etc
-	if (ActionState != EActionState::EAS_Unoccupied) return;
+	if (!IsUnoccupied()) return;
 	
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	
@@ -133,6 +133,11 @@ void AHackAndSlashPlayer::Attack()
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
 	}
+}
+
+void AHackAndSlashPlayer::AttackEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void AHackAndSlashPlayer::EquipWeapon(TObjectPtr<AWeapon> Weapon)
