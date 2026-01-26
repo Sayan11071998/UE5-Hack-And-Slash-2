@@ -144,7 +144,7 @@ void AHackAndSlashPlayer::EquipWeapon(TObjectPtr<AWeapon> Weapon)
 {
 	if (Weapon && GetMesh())
 	{
-		Weapon->AttackMeshToComponent(GetMesh(), WeaponSocketName);
+		Weapon->AttachMeshToComponent(GetMesh(), WeaponSocketName);
 		EquippedWeapon = Weapon;
 	}
 }

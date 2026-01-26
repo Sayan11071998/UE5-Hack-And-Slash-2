@@ -12,7 +12,7 @@ class HACKANDSLASH_API AWeapon : public AActor
 public:	
 	AWeapon();
 	
-	void AttackMeshToComponent(TObjectPtr<USceneComponent> InParent, const FName& InSocketName);
+	void AttachMeshToComponent(TObjectPtr<USceneComponent> InParent, const FName& InSocketName);
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))

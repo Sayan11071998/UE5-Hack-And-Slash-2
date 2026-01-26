@@ -10,7 +10,7 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
-void AWeapon::AttackMeshToComponent(TObjectPtr<USceneComponent> InParent, const FName& InSocketName)
+void AWeapon::AttachMeshToComponent(TObjectPtr<USceneComponent> InParent, const FName& InSocketName)
 {
 	FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, true);
 	WeaponMesh->AttachToComponent(InParent, TransformRules, InSocketName);
