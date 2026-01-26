@@ -128,7 +128,11 @@ void AHackAndSlashPlayer::StopJumping()
 
 void AHackAndSlashPlayer::Attack()
 {
-	Debug::Print(TEXT("Player is Attacking"));
+	if (CanAttack())
+	{
+		PlayAttackMontage();
+		ActionState = EActionState::EAS_Attacking;
+	}
 }
 
 void AHackAndSlashPlayer::EquipWeapon(TObjectPtr<AWeapon> Weapon)
@@ -138,4 +142,33 @@ void AHackAndSlashPlayer::EquipWeapon(TObjectPtr<AWeapon> Weapon)
 		Weapon->AttackMeshToComponent(GetMesh(), WeaponSocketName);
 		EquippedWeapon = Weapon;
 	}
+}
+
+void AHackAndSlashPlayer::PlayMontageSection(TObjectPtr<UAnimMontage> MontageToPlay, const FName& SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && MontageToPlay)
+	{
+		AnimInstance->Montage_Play(MontageToPlay);
+		AnimInstance->Montage_JumpToSection(SectionName, MontageToPlay);
+		
+		Debug::Print(TEXT("Montage Section Name: %s") + SectionName.ToString());
+	}
+}
+
+int32 AHackAndSlashPlayer::PlayRandomMontageSection(TObjectPtr<UAnimMontage> MontageToPlay,
+	const TArray<FName>& SectionNames)
+{
+	if (SectionNames.Num() <= 0) return -1;
+	
+	const int32 MaxSelectionIndex = SectionNames.Num() - 1;
+	const int32 Selection = FMath::RandRange(0, MaxSelectionIndex);
+	PlayMontageSection(MontageToPlay, SectionNames[Selection]);
+	
+	return Selection;
+}
+
+int32 AHackAndSlashPlayer::PlayAttackMontage()
+{
+	return PlayRandomMontageSection(PlayerAttackMontage, AttackMontageSelections);
 }

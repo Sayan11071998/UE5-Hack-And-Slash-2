@@ -37,6 +37,14 @@ protected:
 	// Combat
 	void EquipWeapon(TObjectPtr<AWeapon> Weapon);
 	
+	// Random montage selection and play
+	void PlayMontageSection(TObjectPtr<UAnimMontage> MontageToPlay, const FName& SectionName);
+	int32 PlayRandomMontageSection(TObjectPtr<UAnimMontage> MontageToPlay, const TArray<FName>& SectionNames);
+	
+	// Play montages
+	int32 PlayAttackMontage();
+	
+	
 private:
 	// Camera settings
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Settings", meta = (AllowPrivateAccess = "true"))
@@ -71,6 +79,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	FName WeaponSocketName;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TArray<FName> AttackMontageSelections;
+	
 	UPROPERTY()
 	TObjectPtr<AWeapon> EquippedWeapon;
 	
@@ -78,7 +89,12 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 	
+	// Animation Montages
+	UPROPERTY(EditDefaultsOnly, Category = "Montages", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> PlayerAttackMontage;
+	
 public:
 	FORCEINLINE bool IsUnoccupied() const { return ActionState == EActionState::EAS_Unoccupied ; }
+	FORCEINLINE bool CanAttack() const { return ActionState == EActionState::EAS_Unoccupied; }
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 };
