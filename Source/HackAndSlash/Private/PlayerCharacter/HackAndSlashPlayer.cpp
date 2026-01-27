@@ -131,8 +131,11 @@ void AHackAndSlashPlayer::Look(const FInputActionValue& Value)
 
 void AHackAndSlashPlayer::Jump()
 {
+	if (ActionState == EActionState::EAS_Attacking) return;
+	
 	if (IsUnoccupied())
 	{
+		ActionState = EActionState::EAS_Jumping;
 		Super::Jump();
 	}
 }
@@ -142,8 +145,20 @@ void AHackAndSlashPlayer::StopJumping()
 	Super::StopJumping();
 }
 
+void AHackAndSlashPlayer::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+	
+	if (ActionState == EActionState::EAS_Jumping)
+	{
+		ActionState = EActionState::EAS_Unoccupied;
+	}
+}
+
 void AHackAndSlashPlayer::Attack()
 {
+	if (ActionState == EActionState::EAS_Jumping) return;
+	
 	// Not attacking - start new combo
 	if (CanAttack())
 	{

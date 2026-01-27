@@ -36,8 +36,12 @@ protected:
 	// Movement methods
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	
+	// ~ Begin ACharacter interface
 	virtual void Jump() override;
 	virtual void StopJumping() override;
+	virtual void Landed(const FHitResult& Hit) override;
+	// ~ End ACharacter interface
 	
 	// Attack method
 	void Attack();
@@ -116,7 +120,7 @@ private:
 	
 public:
 	FORCEINLINE bool IsUnoccupied() const { return ActionState == EActionState::EAS_Unoccupied ; }
-	FORCEINLINE bool CanAttack() const { return ActionState == EActionState::EAS_Unoccupied; }
+	FORCEINLINE bool CanAttack() const { return ActionState == EActionState::EAS_Unoccupied || ActionState == EActionState::EAS_Jumping; }
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 	FORCEINLINE int32 GetComboCounter() const { return ComboCounter; }
 };
