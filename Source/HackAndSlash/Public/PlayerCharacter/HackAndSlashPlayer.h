@@ -24,8 +24,11 @@ public:
 	
 	// Combat callbacks (Called from AnimNotifies)
 	void AttackEnd();
-	void SaveAttack();
-	void ResetCombo();
+	
+	// Combo window callbacks (Called from AnimNotifyState)
+	void OpenComboWindow();
+	void CloseComboWindow();
+	void CheckComboInput();
 
 protected:
 	virtual void BeginPlay() override;
@@ -100,13 +103,16 @@ private:
 	int32 ComboCounter = 0;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	bool bShouldContinueCombo = false;
+	bool bAttackInputQueued = false; // Player pressed attack during combo window
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bIsComboWindowOpen = false; // Is the combo window currently active
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	int32 MaxComboCount = 5; // How many attacks in the full combo chain
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	FString ComboSectionPrefix = TEXT("Attack_"); // Section names: Attack_A, Attack_B etc
+	FString ComboSectionPrefix = TEXT("Attack_"); // Section names: Attack_1, Attack_2 etc
 	
 public:
 	FORCEINLINE bool IsUnoccupied() const { return ActionState == EActionState::EAS_Unoccupied ; }

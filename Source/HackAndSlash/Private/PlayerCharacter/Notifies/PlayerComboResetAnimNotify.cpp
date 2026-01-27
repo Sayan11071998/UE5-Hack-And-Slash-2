@@ -12,7 +12,7 @@ void UPlayerComboResetAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnim
 		
 		if (PlayerCharacter)
 		{
-			PlayerCharacter->ResetCombo();
+			// PlayerCharacter->ResetCombo();
 		}
 	}
 }

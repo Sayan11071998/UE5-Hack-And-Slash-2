@@ -12,7 +12,7 @@ void UPlayerAttackSaveAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnim
 		
 		if (PlayerCharacter)
 		{
-			PlayerCharacter->SaveAttack();
+			// PlayerCharacter->SaveAttack();
 		}
 	}
 }

@@ -36,7 +36,8 @@ AHackAndSlashPlayer::AHackAndSlashPlayer() :
 	ActionState = EActionState::EAS_Unoccupied;
 	
 	ComboCounter = 0;
-	bShouldContinueCombo = false;
+	bAttackInputQueued = false;
+	bIsComboWindowOpen = false;
 	MaxComboCount = 5;
 }
 
@@ -67,6 +68,25 @@ void AHackAndSlashPlayer::BeginPlay()
 void AHackAndSlashPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	// Failsafe: If we're stuck in attacking state but no montage is playing, reset
+	if (ActionState == EActionState::EAS_Attacking)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && !AnimInstance->Montage_IsPlaying(PlayerAttackMontage))
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, 
+					TEXT("FAILSAFE: Resetting stuck attack state!"));
+			}
+			
+			ActionState = EActionState::EAS_Unoccupied;
+			ComboCounter = 0;
+			bAttackInputQueued = false;
+			bIsComboWindowOpen = false;
+		}
+	}
 }
 
 void AHackAndSlashPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -130,47 +150,109 @@ void AHackAndSlashPlayer::StopJumping()
 
 void AHackAndSlashPlayer::Attack()
 {
-	// Not currently attacking - Start new combo
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 2.0f, FColor::Cyan, 
+			FString::Printf(TEXT("Attack Input - State: %d, Counter: %d, WindowOpen: %s"), 
+			(int32)ActionState, ComboCounter, bIsComboWindowOpen ? TEXT("YES") : TEXT("NO")));
+	}
+	
+	// Not attacking - start new combo
 	if (CanAttack())
 	{
 		ComboCounter = 0;
-		bShouldContinueCombo = false;
+		bAttackInputQueued = false;
+		bIsComboWindowOpen = false;
 		PerformComboAttack();
 	}
-	else if (ActionState == EActionState::EAS_Attacking) // Currently attacking - Queue next attack in combo
+	// Currently attacking - queue the input if window is open
+	else if (ActionState == EActionState::EAS_Attacking && bIsComboWindowOpen)
 	{
-		// Player pressed attack during current attack - save it!
-		bShouldContinueCombo = true;
+		bAttackInputQueued = true;
+		
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(2, 2.0f, FColor::Green, 
+				TEXT("Attack queued in combo window!"));
+		}
+	}
+	// Currently attacking but window is closed - ignore input
+	else if (ActionState == EActionState::EAS_Attacking && !bIsComboWindowOpen)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(2, 2.0f, FColor::Red, 
+				TEXT("Attack ignored - combo window closed!"));
+		}
+	}
+}
+
+void AHackAndSlashPlayer::OpenComboWindow()
+{
+	bIsComboWindowOpen = true;
+	
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(3, 2.0f, FColor::Yellow, 
+			TEXT(">>> COMBO WINDOW OPENED <<<"));
+	}
+}
+
+void AHackAndSlashPlayer::CloseComboWindow()
+{
+	bIsComboWindowOpen = false;
+	
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(4, 2.0f, FColor::Orange, 
+			TEXT(">>> COMBO WINDOW CLOSED <<<"));
+	}
+}
+
+void AHackAndSlashPlayer::CheckComboInput()
+{
+	// This is called every frame during the combo window state
+	// If player queued an attack, execute it immediately
+	if (bAttackInputQueued && ComboCounter < MaxComboCount)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(5, 2.0f, FColor::Magenta, 
+				TEXT("Executing queued attack!"));
+		}
+		
+		// Reset the flag and continue combo
+		bAttackInputQueued = false;
+		PerformComboAttack();
 	}
 }
 
 void AHackAndSlashPlayer::AttackEnd()
 {
-	// Check if combo should continue AND we haven't reached max
-	if (bShouldContinueCombo && ComboCounter < MaxComboCount)
+	// This is called at the END of the attack animation (after combo window)
+	if (GEngine)
 	{
-		// Combo continues - stay in Attacking state
-		return;
+		GEngine->AddOnScreenDebugMessage(6, 2.0f, FColor::Red, 
+			FString::Printf(TEXT("AttackEnd - Counter: %d, InputQueued: %s"), 
+			ComboCounter, bAttackInputQueued ? TEXT("YES") : TEXT("NO")));
 	}
-    
-	// Either no combo queued OR reached max combo - reset everything
+	
+	// If we have a queued input that wasn't consumed, it means CheckComboInput didn't fire
+	// This shouldn't happen if your AnimNotifyState is set up correctly
+	if (bAttackInputQueued)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(7, 3.0f, FColor::Red, 
+				TEXT("WARNING: Input was queued but not consumed! Check AnimNotifyState placement."));
+		}
+	}
+	
+	// Reset everything - combo is over
 	ActionState = EActionState::EAS_Unoccupied;
 	ComboCounter = 0;
-	bShouldContinueCombo = false;  // Clean up the flag too
-}
-
-void AHackAndSlashPlayer::SaveAttack()
-{
-	if (bShouldContinueCombo && ComboCounter < MaxComboCount)
-	{
-		bShouldContinueCombo = false;
-		PerformComboAttack();
-	}
-}
-
-void AHackAndSlashPlayer::ResetCombo()
-{
-	bShouldContinueCombo = false;
+	bAttackInputQueued = false;
+	bIsComboWindowOpen = false;
 }
 
 void AHackAndSlashPlayer::EquipWeapon(TObjectPtr<AWeapon> Weapon)
@@ -214,9 +296,9 @@ void AHackAndSlashPlayer::PerformComboAttack()
 		
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, 
-				FString::Printf(TEXT("Combo: %d / %d - Section: %s"), 
-				ComboCounter, MaxComboCount, *SectionName.ToString()));
+			GEngine->AddOnScreenDebugMessage(8, 2.0f, FColor::Yellow, 
+				FString::Printf(TEXT("Playing: %s (Combo %d/%d)"), 
+				*SectionName.ToString(), ComboCounter, MaxComboCount));
 		}
 	}
 }
