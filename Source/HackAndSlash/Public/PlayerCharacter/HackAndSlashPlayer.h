@@ -22,8 +22,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
-	// Combat
+	// Combat callbacks (Called from AnimNotifies)
 	void AttackEnd();
+	void SaveAttack();
+	void ResetCombo();
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,12 +42,13 @@ protected:
 	// Combat
 	void EquipWeapon(TObjectPtr<AWeapon> Weapon);
 	
-	// Random montage selection and play
+	// Montage playback
 	void PlayMontageSection(TObjectPtr<UAnimMontage> MontageToPlay, const FName& SectionName);
-	int32 PlayRandomMontageSection(TObjectPtr<UAnimMontage> MontageToPlay, const TArray<FName>& SectionNames);
+	void PlayAttackMontage();
 	
-	// Play montages
-	int32 PlayAttackMontage();
+	// Combo system
+	void PerformComboAttack();
+	FName GetAttackSectionName(int32 ComboIndex);
 
 private:
 	// Camera settings
@@ -81,9 +84,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	FName WeaponSocketName;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	TArray<FName> AttackMontageSelections;
-	
 	UPROPERTY()
 	TObjectPtr<AWeapon> EquippedWeapon;
 	
@@ -95,8 +95,22 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Montages", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> PlayerAttackMontage;
 	
+	// Combo system variables
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	int32 ComboCounter = 0;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bShouldContinueCombo = false;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	int32 MaxComboCount = 5; // How many attacks in the full combo chain
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	FString ComboSectionPrefix = TEXT("Attack_"); // Section names: Attack_A, Attack_B etc
+	
 public:
 	FORCEINLINE bool IsUnoccupied() const { return ActionState == EActionState::EAS_Unoccupied ; }
 	FORCEINLINE bool CanAttack() const { return ActionState == EActionState::EAS_Unoccupied; }
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
+	FORCEINLINE int32 GetComboCounter() const { return ComboCounter; }
 };

@@ -6,8 +6,6 @@
 #include "EnhancedInputComponent.h"
 #include "Items/Weapon.h"
 
-#include "HackAndSlashDebugHelper.h"
-
 AHackAndSlashPlayer::AHackAndSlashPlayer() :
 	CameraArmLength(430.f)
 {
@@ -36,6 +34,10 @@ AHackAndSlashPlayer::AHackAndSlashPlayer() :
 	ViewCamera->SetRelativeLocation(FVector(0.f, 40.f, 0.f));
 	
 	ActionState = EActionState::EAS_Unoccupied;
+	
+	ComboCounter = 0;
+	bShouldContinueCombo = false;
+	MaxComboCount = 5;
 }
 
 void AHackAndSlashPlayer::BeginPlay()
@@ -79,7 +81,7 @@ void AHackAndSlashPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(PlayerJumpAction, ETriggerEvent::Started, this, &AHackAndSlashPlayer::Jump);
 		EnhancedInputComponent->BindAction(PlayerJumpAction, ETriggerEvent::Completed, this, &AHackAndSlashPlayer::StopJumping);
 		
-		EnhancedInputComponent->BindAction(PlayerAttackAction, ETriggerEvent::Triggered, this, &AHackAndSlashPlayer::Attack);
+		EnhancedInputComponent->BindAction(PlayerAttackAction, ETriggerEvent::Started, this, &AHackAndSlashPlayer::Attack);
 	}
 }
 
@@ -128,16 +130,47 @@ void AHackAndSlashPlayer::StopJumping()
 
 void AHackAndSlashPlayer::Attack()
 {
+	// Not currently attacking - Start new combo
 	if (CanAttack())
 	{
-		PlayAttackMontage();
-		ActionState = EActionState::EAS_Attacking;
+		ComboCounter = 0;
+		bShouldContinueCombo = false;
+		PerformComboAttack();
+	}
+	else if (ActionState == EActionState::EAS_Attacking) // Currently attacking - Queue next attack in combo
+	{
+		// Player pressed attack during current attack - save it!
+		bShouldContinueCombo = true;
 	}
 }
 
 void AHackAndSlashPlayer::AttackEnd()
 {
+	// Check if combo should continue AND we haven't reached max
+	if (bShouldContinueCombo && ComboCounter < MaxComboCount)
+	{
+		// Combo continues - stay in Attacking state
+		return;
+	}
+    
+	// Either no combo queued OR reached max combo - reset everything
 	ActionState = EActionState::EAS_Unoccupied;
+	ComboCounter = 0;
+	bShouldContinueCombo = false;  // Clean up the flag too
+}
+
+void AHackAndSlashPlayer::SaveAttack()
+{
+	if (bShouldContinueCombo && ComboCounter < MaxComboCount)
+	{
+		bShouldContinueCombo = false;
+		PerformComboAttack();
+	}
+}
+
+void AHackAndSlashPlayer::ResetCombo()
+{
+	bShouldContinueCombo = false;
 }
 
 void AHackAndSlashPlayer::EquipWeapon(TObjectPtr<AWeapon> Weapon)
@@ -154,26 +187,44 @@ void AHackAndSlashPlayer::PlayMontageSection(TObjectPtr<UAnimMontage> MontageToP
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && MontageToPlay)
 	{
-		AnimInstance->Montage_Play(MontageToPlay);
+		if (!AnimInstance->Montage_IsPlaying(MontageToPlay))
+		{
+			AnimInstance->Montage_Play(MontageToPlay);
+		}
 		AnimInstance->Montage_JumpToSection(SectionName, MontageToPlay);
-		
-		Debug::Print(TEXT("Montage Section Name: %s") + SectionName.ToString());
 	}
 }
 
-int32 AHackAndSlashPlayer::PlayRandomMontageSection(TObjectPtr<UAnimMontage> MontageToPlay,
-	const TArray<FName>& SectionNames)
+void AHackAndSlashPlayer::PlayAttackMontage()
 {
-	if (SectionNames.Num() <= 0) return -1;
-	
-	const int32 MaxSelectionIndex = SectionNames.Num() - 1;
-	const int32 Selection = FMath::RandRange(0, MaxSelectionIndex);
-	PlayMontageSection(MontageToPlay, SectionNames[Selection]);
-	
-	return Selection;
+	PerformComboAttack();
 }
 
-int32 AHackAndSlashPlayer::PlayAttackMontage()
+void AHackAndSlashPlayer::PerformComboAttack()
 {
-	return PlayRandomMontageSection(PlayerAttackMontage, AttackMontageSelections);
+	if (PlayerAttackMontage)
+	{
+		ActionState = EActionState::EAS_Attacking;
+		
+		// Get appropriate attack section name based on combo counter
+		FName SectionName = GetAttackSectionName(ComboCounter);
+		PlayMontageSection(PlayerAttackMontage, SectionName);
+		
+		ComboCounter++;
+		
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, 
+				FString::Printf(TEXT("Combo: %d / %d - Section: %s"), 
+				ComboCounter, MaxComboCount, *SectionName.ToString()));
+		}
+	}
+}
+
+FName AHackAndSlashPlayer::GetAttackSectionName(int32 ComboIndex)
+{
+	int32 ClampedIndex = FMath::Clamp(ComboIndex, 0, MaxComboCount - 1);
+	
+	FString SectionString = FString::Printf(TEXT("%s%d"), *ComboSectionPrefix, ClampedIndex + 1);
+	return FName(*SectionString);
 }
