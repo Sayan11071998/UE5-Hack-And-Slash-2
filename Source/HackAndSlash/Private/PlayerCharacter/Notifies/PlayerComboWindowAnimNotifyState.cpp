@@ -17,22 +17,6 @@ void UPlayerComboWindowAnimNotifyState::NotifyBegin(USkeletalMeshComponent* Mesh
 	}
 }
 
-void UPlayerComboWindowAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-	const FAnimNotifyEventReference& EventReference)
-{
-	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	
-	if (MeshComp && MeshComp->GetOwner())
-	{
-		AHackAndSlashPlayer* PlayerCharacter = Cast<AHackAndSlashPlayer>(MeshComp->GetOwner());
-		
-		if (PlayerCharacter)
-		{
-			PlayerCharacter->CloseComboWindow();
-		}
-	}
-}
-
 void UPlayerComboWindowAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
@@ -46,6 +30,22 @@ void UPlayerComboWindowAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshC
 		if (PlayerCharacter)
 		{
 			PlayerCharacter->CheckComboInput();
+		}
+	}
+}
+
+void UPlayerComboWindowAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	const FAnimNotifyEventReference& EventReference)
+{
+	Super::NotifyEnd(MeshComp, Animation, EventReference);
+	
+	if (MeshComp && MeshComp->GetOwner())
+	{
+		AHackAndSlashPlayer* PlayerCharacter = Cast<AHackAndSlashPlayer>(MeshComp->GetOwner());
+		
+		if (PlayerCharacter)
+		{
+			PlayerCharacter->CloseComboWindow();
 		}
 	}
 }
