@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "CharacterTypes.h"
 #include "HackAndSlashPlayer.generated.h"
 
 struct FInputActionValue;
@@ -9,6 +10,7 @@ class UInputAction;
 class UInputMappingContext;
 class UCameraComponent;
 class USpringArmComponent;
+class AWeapon;
 
 UCLASS()
 class HACKANDSLASH_API AHackAndSlashPlayer : public ACharacter
@@ -19,6 +21,14 @@ public:
 	AHackAndSlashPlayer();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	// Combat callbacks (Called from AnimNotifies)
+	void AttackEnd();
+	
+	// Combo window callbacks (Called from AnimNotifyState)
+	void OpenComboWindow();
+	void CloseComboWindow();
+	void CheckComboInput();
 
 protected:
 	virtual void BeginPlay() override;
@@ -26,9 +36,27 @@ protected:
 	// Movement methods
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	
+	// ~ Begin ACharacter interface
 	virtual void Jump() override;
 	virtual void StopJumping() override;
+	virtual void Landed(const FHitResult& Hit) override;
+	// ~ End ACharacter interface
 	
+	// Attack method
+	void Attack();
+	
+	// Combat
+	void EquipWeapon(TObjectPtr<AWeapon> Weapon);
+	
+	// Montage playback
+	void PlayMontageSection(TObjectPtr<UAnimMontage> MontageToPlay, const FName& SectionName);
+	void PlayAttackMontage();
+	
+	// Combo system
+	void PerformComboAttack();
+	FName GetAttackSectionName(int32 ComboIndex);
+
 private:
 	// Camera settings
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Settings", meta = (AllowPrivateAccess = "true"))
@@ -52,4 +80,47 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Enhanced Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> PlayerJumpAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Enhanced Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> PlayerAttackAction;
+	
+	// Weapon system
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	FName WeaponSocketName;
+	
+	UPROPERTY()
+	TObjectPtr<AWeapon> EquippedWeapon;
+	
+	// Action state
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
+	
+	// Animation Montages
+	UPROPERTY(EditDefaultsOnly, Category = "Montages", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> PlayerAttackMontage;
+	
+	// Combo system variables
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	int32 ComboCounter = 0;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bAttackInputQueued = false; // Player pressed attack during combo window
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bIsComboWindowOpen = false; // Is the combo window currently active
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	int32 MaxComboCount = 5; // How many attacks in the full combo chain
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	FString ComboSectionPrefix = TEXT("Attack_"); // Section names: Attack_1, Attack_2 etc
+	
+public:
+	FORCEINLINE bool IsUnoccupied() const { return ActionState == EActionState::EAS_Unoccupied ; }
+	FORCEINLINE bool CanAttack() const { return ActionState == EActionState::EAS_Unoccupied || ActionState == EActionState::EAS_Jumping; }
+	FORCEINLINE EActionState GetActionState() const { return ActionState; }
+	FORCEINLINE int32 GetComboCounter() const { return ComboCounter; }
 };

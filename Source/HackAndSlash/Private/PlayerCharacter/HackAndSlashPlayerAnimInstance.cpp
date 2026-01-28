@@ -71,6 +71,9 @@ void UHackAndSlashPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		UpdateJumpLogic();
 		UpdateTurnInPlace();
 		UpdateRotation(DeltaSeconds);
+		
+		// Get action state from player
+		ActionState = PlayerCharacter->GetActionState();
 
 		// Check curve for FullBody state
 		bIsFullBody = GetCurveValue(FName(TEXT("FullBody"))) > 0.f;
@@ -136,8 +139,14 @@ void UHackAndSlashPlayerAnimInstance::UpdateGroundLocomotion(float DeltaSeconds)
 		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, QueryParams))
 		{
 			FVector FloorNormal = HitResult.ImpactNormal;
-			SlopeAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(FloorNormal, FVector::UpVector)));
-			bIsOnSlope = SlopeAngle > 5.f;
+			float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(FloorNormal, FVector::UpVector)));
+			
+			// Detect if moving uphill or downhill
+			FVector Forward = PlayerCharacter->GetActorForwardVector();
+			float SlopeSign = (FVector::DotProduct(Forward, FloorNormal) < 0.f) ? 1.f : -1.f;
+			SlopeAngle = Angle * SlopeSign;
+			
+			bIsOnSlope = FMath::Abs(SlopeAngle) > 5.f;
 		}
 		else
 		{
@@ -201,13 +210,13 @@ void UHackAndSlashPlayerAnimInstance::UpdateRotation(float DeltaSeconds)
 	Pitch = DeltaAim.Pitch;
 	Yaw = DeltaAim.Yaw;
 	
-	// Leaning (Smoothed)
+	// Leaning
 	FRotator RotationDelta = UKismetMathLibrary::NormalizedDeltaRotator(ActorRotation, RotationLastTick);
 	float TargetLean = RotationDelta.Yaw / 7.0f;
 	
 	if (DeltaSeconds > 0.f)
 	{
-		YawDelta = FMath::FInterpTo(YawDelta, TargetLean, DeltaSeconds, 6.0f);
+		Lean = FMath::FInterpTo(Lean, TargetLean, DeltaSeconds, 6.0f);
 	}
 	
 	RotationLastTick = ActorRotation;

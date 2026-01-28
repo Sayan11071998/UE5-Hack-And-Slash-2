@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "CharacterTypes.h"
 #include "HackAndSlashPlayerAnimInstance.generated.h"
 
 class UCharacterMovementComponent;
@@ -67,6 +68,9 @@ public:
 	float YawDelta;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float Lean;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bShouldTurnInPlace;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
@@ -124,6 +128,10 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	bool bIsFullBody;
+	
+	// Action state.
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	EActionState ActionState;
 	
 private:
 	void UpdateGroundLocomotion(float DeltaSeconds);
